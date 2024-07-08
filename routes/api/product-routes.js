@@ -35,23 +35,35 @@ router.get('/:id', async (req, res) => {
 
 // create new product
 router.post('/', async (req, res) => {
-  try {
-    const product = await Product.create(req.body);
-
-    if (req.body.tagIds.length) {
-      const productTagIdArr = req.body.tagIds.map((tag_id) => {
-        return {
-          product_id: product.id,
-          tag_id,
-        };
-      });
-      await ProductTag.bulkCreate(productTagIdArr);
+    try {
+      // Validate request body
+      const { product_name, price, stock, category_id } = req.body;
+      if (!product_name || typeof price !== 'number' || typeof stock !== 'number' || typeof category_id !== 'number') {
+        return res.status(400).json({ message: 'Invalid request body' });
+      }
+  
+      // Log the request body
+      console.log(req.body);
+  
+      const product = await Product.create(req.body);
+  
+      if (req.body.tagIds && req.body.tagIds.length) {
+        const productTagIdArr = req.body.tagIds.map((tag_id) => {
+          return {
+            product_id: product.id,
+            tag_id,
+          };
+        });
+        await ProductTag.bulkCreate(productTagIdArr);
+      }
+  
+      res.status(200).json(product);
+    } catch (err) {
+      console.log(err); // Log any error
+      res.status(400).json(err);
     }
-    res.status(200).json(product);
-  } catch (err) {
-    res.status(400).json(err);
-  }
-});
+  });
+  
 
 // update product
 router.put('/:id', async (req, res) => {
